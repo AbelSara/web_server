@@ -45,4 +45,15 @@ public class Message {
     public int writeToMessage(byte[] bytes) {
         return writeToMessage(bytes, 0, bytes.length);
     }
+
+    public int writePartitionMessageToMessage(Message message, int lastIdx) {
+        int startIdx = message.offset + lastIdx;
+        int len = message.length - (lastIdx - offset);
+        while (len > capacity - this.length) {
+            if (!messageBuffer.expandMessage(this))
+                return -1;
+        }
+        System.arraycopy(message.sharedArray, startIdx, message.sharedArray, this.offset + this.length, len);
+        return len;
+    }
 }
