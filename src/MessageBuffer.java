@@ -1,5 +1,5 @@
 /**
- * @Author Honghan Zhu
+ * @author Honghan Zhu
  */
 public class MessageBuffer {
     public static int KB = 1024;

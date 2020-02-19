@@ -1,7 +1,7 @@
 import java.nio.ByteBuffer;
 
 /**
- * @Author Honghan Zhu
+ * @author Honghan Zhu
  */
 public class Message {
     private MessageBuffer messageBuffer = null;

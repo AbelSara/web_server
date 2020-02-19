@@ -1,5 +1,5 @@
 /**
- * @Author Honghan Zhu
+ * @author Honghan Zhu
  */
 public class QueueIntFlip {
     public int[] elements = null;
