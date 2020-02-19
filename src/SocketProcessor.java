@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * @author Honghan Zhu
  */
-public class SocketPorcessor implements Runnable {
+public class SocketProcessor implements Runnable {
     private Queue<Socket> inboundSocketQueue = new LinkedList<>();
 
     //todo Not used now - but perhaps will be later - to check for space in the buffer before reading from sockets (space for more to write?)
@@ -37,7 +37,7 @@ public class SocketPorcessor implements Runnable {
     private Set<Socket> nonEmptySockets = new HashSet<>();
     private Set<Socket> emptySockets = new HashSet<>();
 
-    public SocketPorcessor(Queue<Socket> inboundSocketQueue, MessageBuffer readMessageBuffer, MessageBuffer writeMessageBuffer,
+    public SocketProcessor(Queue<Socket> inboundSocketQueue, MessageBuffer readMessageBuffer, MessageBuffer writeMessageBuffer,
                            IMessageProcessor messageProcessor, IMessageReaderFactory messageReaderFactory) throws IOException {
         this.inboundSocketQueue = inboundSocketQueue;
         this.readMessageBuffer = readMessageBuffer;
