@@ -1,7 +1,43 @@
-package PACKAGE_NAME;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 /**
- * Created by zhh on 2020/2/19.
+ * @author Honghan Zhu
  */
 public class Socket {
+    public long socketId;
+    public SocketChannel socketChannel = null;
+    public IMessageReader reader = null;
+    public MessageWriter writer = null;
+    public boolean endOfStreamReached = false;
+
+    public Socket() {
+    }
+
+    public Socket(SocketChannel socketChannel) {
+        this.socketChannel = socketChannel;
+    }
+
+    public int read(ByteBuffer byteBuffer) throws IOException {
+        int len = socketChannel.read(byteBuffer);
+        int total = len;
+        while (len > 0) {
+            len = socketChannel.read(byteBuffer);
+            total += len;
+        }
+        if (len == -1)
+            endOfStreamReached = true;
+        return total;
+    }
+
+    public int write(ByteBuffer byteBuffer) throws IOException {
+        int len = socketChannel.write(byteBuffer);
+        int total = len;
+        while (byteBuffer.hasRemaining()) {
+            len = socketChannel.write(byteBuffer);
+            total += len;
+        }
+        return total;
+    }
 }

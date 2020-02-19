@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
@@ -14,7 +13,8 @@ public class MessageWriter {
     public void enq(Message message) {
         if (messageInProgress == null)
             messageInProgress = message;
-        else writerQueue.add(message);
+        else
+            writerQueue.add(message);
     }
 
     public void write(Socket socket, ByteBuffer byteBuffer) throws IOException {
@@ -24,10 +24,12 @@ public class MessageWriter {
             messageInProgress = writerQueue.removeFirst();
         byteBuffer.put(messageInProgress.sharedArray, messageInProgress.offset, messageInProgress.length);
         byteBuffer.flip();
-        bytesWritten = socket.getChannel().write(byteBuffer);
+        bytesWritten += socket.write(byteBuffer);
         byteBuffer.clear();
         if (bytesWritten >= messageInProgress.length) {
             messageInProgress = null;
+            //mark I think should update this field.
+            bytesWritten = 0;
             if (!writerQueue.isEmpty())
                 messageInProgress = writerQueue.removeFirst();
         }
