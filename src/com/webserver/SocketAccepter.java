@@ -1,3 +1,5 @@
+package com.webserver;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -29,7 +31,7 @@ public class SocketAccepter implements Runnable {
         while (true) {
             try {
                 SocketChannel socketChannel = serverSocketChannel.accept();
-                System.out.println("Socket accepted: " + socketChannel);
+                System.out.println("com.webserver.Socket accepted: " + socketChannel);
                 socketQueue.add(new Socket(socketChannel));
             } catch (IOException e) {
                 e.printStackTrace();

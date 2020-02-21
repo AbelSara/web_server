@@ -1,3 +1,5 @@
+package com.webserver;
+
 import com.sun.org.apache.bcel.internal.generic.Select;
 
 import java.io.IOException;
@@ -67,10 +69,11 @@ public class SocketProcessor implements Runnable {
             socket.socketChannel.configureBlocking(false);
             socket.reader = messageReaderFactory.createMessageReader();
             socket.reader.init(readMessageBuffer);
-            //a single MessageWriter for a single socket
+            //a single com.webserver.MessageWriter for a single socket
             socket.writer = new MessageWriter();
             socketMap.put(socket.socketId, socket);
-            socket.socketChannel.register(readSelector, SelectionKey.OP_READ, socket);
+            SelectionKey key = socket.socketChannel.register(readSelector, SelectionKey.OP_READ);
+            key.attach(socket);
             socket = inboundSocketQueue.poll();
         }
     }
@@ -95,11 +98,14 @@ public class SocketProcessor implements Runnable {
         socket.reader.read(socket, readByteBuffer);
 
         List<Message> fullMessages = socket.reader.getMessages();
-        for (Message message : fullMessages) {
-            message.socketId = socket.socketId;
-            messageProcessor.process(message, writeProxy);
+        if (fullMessages.size() > 0) {
+            for (Message message : fullMessages) {
+                message.socketId = socket.socketId;
+                messageProcessor.process(message, writeProxy);
+            }
+            fullMessages.clear();
         }
-        fullMessages.clear();
+        //为什么在这里移除socket
         if (socket.endOfStreamReached) {
             System.out.println("socket closed: " + socket.socketId);
             socketMap.remove(socket.socketId);
@@ -115,6 +121,7 @@ public class SocketProcessor implements Runnable {
         registerNonEmptySockets();
         int writeSocketNum = writeSelector.selectNow();
         if (writeSocketNum > 0) {
+            System.out.println("prepare write");
             Set<SelectionKey> selectionKeys = writeSelector.selectedKeys();
             Iterator<SelectionKey> iterator = selectionKeys.iterator();
             while (iterator.hasNext()) {
@@ -143,6 +150,7 @@ public class SocketProcessor implements Runnable {
                 }
                 socket.writer.enq(outMessage);
             }
+            outMessage = outboundMessageQueue.poll();
         }
     }
 
