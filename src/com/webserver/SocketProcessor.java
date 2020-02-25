@@ -1,7 +1,5 @@
 package com.webserver;
 
-import com.sun.org.apache.bcel.internal.generic.Select;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -69,7 +67,7 @@ public class SocketProcessor implements Runnable {
             socket.socketChannel.configureBlocking(false);
             socket.reader = messageReaderFactory.createMessageReader();
             socket.reader.init(readMessageBuffer);
-            //a single com.webserver.MessageWriter for a single socket
+            //a single MessageWriter for a single socket
             socket.writer = new MessageWriter();
             socketMap.put(socket.socketId, socket);
             SelectionKey key = socket.socketChannel.register(readSelector, SelectionKey.OP_READ);
@@ -128,6 +126,7 @@ public class SocketProcessor implements Runnable {
                 SelectionKey key = iterator.next();
                 Socket socket = (Socket) key.attachment();
                 socket.writer.write(socket, writeByteBuffer);
+                System.out.println("write message.");
                 if (socket.writer.isEmpty())
                     emptySockets.add(socket);
                 iterator.remove();

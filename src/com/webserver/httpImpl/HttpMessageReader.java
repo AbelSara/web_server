@@ -36,12 +36,13 @@ public class HttpMessageReader implements IMessageReader {
         nextMessage.writeToMessage(byteBuffer);
         int endIdx = HttpUtil.parseHttpRequest(nextMessage.sharedArray, nextMessage.offset,
                 nextMessage.offset + nextMessage.length, (HttpHeaders) nextMessage.metaData);
+
         if (endIdx != -1) {
             Message message = this.messageBuffer.getMessage();
             message.metaData = new HttpHeaders();
 
             message.writePartitionMessageToMessage(nextMessage, endIdx);
-
+            //是否应该将nextMessage中的内容截断
             completeMessages.add(nextMessage);
             nextMessage = message;
         }
