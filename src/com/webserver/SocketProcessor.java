@@ -102,10 +102,12 @@ public class SocketProcessor implements Runnable {
         socket.writer = new MessageWriter();
         socketMap.put(socket.socketId, socket);
         socket.socketChannel.register(readSelector, SelectionKey.OP_READ, socket);
+        System.out.println("register socket channel to read messages");
     }
 
     private void readFromSocket(SelectionKey key) throws IOException {
         Socket socket = (Socket) key.attachment();
+
         socket.reader.read(socket, readByteBuffer);
 
         List<Message> fullMessages = socket.reader.getMessages();
@@ -171,6 +173,7 @@ public class SocketProcessor implements Runnable {
 
     private void cancelEmptySockets() {
         for (Socket socket : emptySockets) {
+            System.out.println("cancel empty socket which id is " + socket.socketId);
             SelectionKey key = socket.socketChannel.keyFor(writeSelector);
             key.cancel();
         }
@@ -179,7 +182,8 @@ public class SocketProcessor implements Runnable {
 
     private void registerNonEmptySockets() throws ClosedChannelException {
         for (Socket socket : nonEmptySockets) {
-            SelectionKey key = socket.socketChannel.register(writeSelector, SelectionKey.OP_WRITE, socket);
+            System.out.println("register non-empty socket which id is " + socket.socketId);
+            socket.socketChannel.register(writeSelector, SelectionKey.OP_WRITE, socket);
         }
         nonEmptySockets.clear();
     }

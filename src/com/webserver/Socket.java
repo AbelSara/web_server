@@ -14,15 +14,17 @@ public class Socket {
     public MessageWriter writer = null;
     public boolean endOfStreamReached = false;
 
-    public Socket() {
-    }
-
     public Socket(SocketChannel socketChannel) {
         this.socketChannel = socketChannel;
     }
 
-    public int read(ByteBuffer byteBuffer) throws IOException {
-        int len = socketChannel.read(byteBuffer);
+    public int read(ByteBuffer byteBuffer) throws IOException{
+        int len = 0;
+        try {
+            len = socketChannel.read(byteBuffer);
+        }catch(IOException e){
+            len = -1;
+        }
         int total = len;
         while (len > 0) {
             len = socketChannel.read(byteBuffer);

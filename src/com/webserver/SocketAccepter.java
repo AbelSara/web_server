@@ -30,7 +30,7 @@ public class SocketAccepter implements Runnable {
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.bind(new InetSocketAddress(tcpPort));
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            System.out.println("reigster");
+            System.out.println("register server socket channel to accept new connection.");
         } catch (Exception e) {
             e.printStackTrace();
         }
