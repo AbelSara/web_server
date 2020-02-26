@@ -25,6 +25,8 @@ public class Main {
             System.out.println("Message Received from socket: " + request.socketId);
 
             Message response = writeProxy.getMessage();
+
+            //bind write socket with read socket id;
             response.socketId = request.socketId;
             response.writeToMessage(httpResponseBytes);
 

@@ -31,8 +31,9 @@ public class MessageWriter {
         bytesWritten += socket.write(byteBuffer);
         byteBuffer.clear();
         if (bytesWritten >= messageInProgress.length) {
+            //for cancel register
             messageInProgress = null;
-            //mark I think should update this field.
+            //mark, I think should update this field.
             bytesWritten = 0;
             if (!writerQueue.isEmpty())
                 messageInProgress = writerQueue.removeFirst();

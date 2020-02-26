@@ -97,8 +97,10 @@ public class SocketProcessor implements Runnable {
 
         List<Message> fullMessages = socket.reader.getMessages();
         if (fullMessages.size() > 0) {
+            //response while read full message.
             for (Message message : fullMessages) {
                 message.socketId = socket.socketId;
+                //only join response message to write queue.
                 messageProcessor.process(message, writeProxy);
             }
             fullMessages.clear();
@@ -119,14 +121,13 @@ public class SocketProcessor implements Runnable {
         registerNonEmptySockets();
         int writeSocketNum = writeSelector.selectNow();
         if (writeSocketNum > 0) {
-            System.out.println("prepare write");
             Set<SelectionKey> selectionKeys = writeSelector.selectedKeys();
             Iterator<SelectionKey> iterator = selectionKeys.iterator();
             while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
                 Socket socket = (Socket) key.attachment();
                 socket.writer.write(socket, writeByteBuffer);
-                System.out.println("write message.");
+                // next loop will cancel this socket in writer selector;
                 if (socket.writer.isEmpty())
                     emptySockets.add(socket);
                 iterator.remove();
@@ -138,6 +139,7 @@ public class SocketProcessor implements Runnable {
     private void takeNewOutBoundMessages() {
         Message outMessage = outboundMessageQueue.poll();
         while (outMessage != null) {
+            // join writer queue from shared queue in write proxy with socket id
             Socket socket = socketMap.get(outMessage.socketId);
             if (socket != null) {
                 MessageWriter writer = socket.writer;
@@ -147,6 +149,7 @@ public class SocketProcessor implements Runnable {
                     emptySockets.remove(socket);
                     nonEmptySockets.add(socket);
                 }
+
                 socket.writer.enq(outMessage);
             }
             outMessage = outboundMessageQueue.poll();
