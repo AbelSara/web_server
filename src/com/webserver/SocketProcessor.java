@@ -2,15 +2,14 @@ package com.webserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import java.nio.channels.*;
 import java.util.*;
 
 /**
  * @author Honghan Zhu
  */
 public class SocketProcessor implements Runnable {
+
     private Queue<Socket> inboundSocketQueue = new LinkedList<>();
 
     //todo Not used now - but perhaps will be later - to check for space in the buffer before reading from sockets (space for more to write?)
@@ -37,30 +36,26 @@ public class SocketProcessor implements Runnable {
     private Set<Socket> nonEmptySockets = new HashSet<>();
     private Set<Socket> emptySockets = new HashSet<>();
 
-    public SocketProcessor(Queue<Socket> inboundSocketQueue, MessageBuffer readMessageBuffer, MessageBuffer writeMessageBuffer,
-                           IMessageProcessor messageProcessor, IMessageReaderFactory messageReaderFactory) throws IOException {
-        this.inboundSocketQueue = inboundSocketQueue;
+    public SocketProcessor(/*Queue<Socket> inboundSocketQueue,*/ MessageBuffer readMessageBuffer, MessageBuffer writeMessageBuffer,
+                           IMessageProcessor messageProcessor, IMessageReaderFactory messageReaderFactory, Selector readSelector) throws IOException {
+//        this.inboundSocketQueue = inboundSocketQueue;
         this.readMessageBuffer = readMessageBuffer;
         this.writeMessageBuffer = writeMessageBuffer;
         this.messageProcessor = messageProcessor;
         this.messageReaderFactory = messageReaderFactory;
         this.writeProxy = new WriteProxy(writeMessageBuffer, outboundMessageQueue);
-        readSelector = Selector.open();
-        writeSelector = Selector.open();
+        this.readSelector = readSelector;
+        this.writeSelector = Selector.open();
     }
 
     public void executeCycle() throws IOException {
-        takeNewsSocket();
+//        takeNewSocket();
         readFromSocket();
         writeToSockets();
     }
 
-    /**
-     * config each socket of inboundSocketQueue and register select.
-     *
-     * @throws IOException
-     */
-    public void takeNewsSocket() throws IOException {
+    /* won't use this function
+    public void takeNewSocket() throws IOException {
         Socket socket = inboundSocketQueue.poll();
         while (socket != null) {
             socket.socketId = nextSocketId++;
@@ -70,11 +65,11 @@ public class SocketProcessor implements Runnable {
             //a single MessageWriter for a single socket
             socket.writer = new MessageWriter();
             socketMap.put(socket.socketId, socket);
-            SelectionKey key = socket.socketChannel.register(readSelector, SelectionKey.OP_READ);
-            key.attach(socket);
+            SelectionKey key = socket.socketChannel.register(readSelector, SelectionKey.OP_READ, socket);
             socket = inboundSocketQueue.poll();
         }
     }
+    */
 
     public void readFromSocket() throws IOException {
         int readySocketNum = readSelector.selectNow();
@@ -83,12 +78,30 @@ public class SocketProcessor implements Runnable {
             Iterator<SelectionKey> iterator = selectionKeys.iterator();
             while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
-                readFromSocket(key);
+                if (key.isAcceptable()) {
+                    acceptSocket(key);
+                } else if (key.isReadable()) {
+                    readFromSocket(key);
+                }
                 iterator.remove();
             }
             //does not help?
             selectionKeys.clear();
         }
+    }
+
+    private void acceptSocket(SelectionKey key) throws IOException {
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverSocketChannel.accept();
+        Socket socket = new Socket(socketChannel);
+        socket.socketId = nextSocketId++;
+        socket.socketChannel.configureBlocking(false);
+        socket.reader = messageReaderFactory.createMessageReader();
+        socket.reader.init(readMessageBuffer);
+        //a single MessageWriter for a single socket
+        socket.writer = new MessageWriter();
+        socketMap.put(socket.socketId, socket);
+        socket.socketChannel.register(readSelector, SelectionKey.OP_READ, socket);
     }
 
     private void readFromSocket(SelectionKey key) throws IOException {

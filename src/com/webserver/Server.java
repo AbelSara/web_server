@@ -1,6 +1,7 @@
 package com.webserver;
 
 import java.io.IOException;
+import java.nio.channels.Selector;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -22,12 +23,13 @@ public class Server {
     }
 
     public void startServer() throws IOException {
-        Queue<Socket> socketQueue = new LinkedBlockingQueue<>();
-        socketAccepter = new SocketAccepter(tcpPort, socketQueue);
+//        Queue<Socket> socketQueue = new LinkedBlockingQueue<>();
         MessageBuffer readBuffer = new MessageBuffer();
         MessageBuffer writeBuffer = new MessageBuffer();
-        socketPorcessor = new SocketProcessor(socketQueue, readBuffer, writeBuffer,
-                messageProcessor, messageReaderFactory);
+        Selector readSelector = Selector.open();
+        socketAccepter = new SocketAccepter(tcpPort, readSelector);
+        socketPorcessor = new SocketProcessor(readBuffer, writeBuffer,
+                messageProcessor, messageReaderFactory,readSelector);
         new Thread(socketAccepter).start();
         new Thread(socketPorcessor).start();
     }

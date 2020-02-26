@@ -1,10 +1,11 @@
 package com.webserver;
 
-import java.io.IOException;
+
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Queue;
+
 
 /**
  * @author Honghan Zhu
@@ -12,11 +13,13 @@ import java.util.Queue;
 public class SocketAccepter implements Runnable {
     private int tcpPort = 0;
     private ServerSocketChannel serverSocketChannel = null;
-    private Queue<Socket> socketQueue = null;
+//    private Queue<Socket> socketQueue = null;
+    private Selector selector = null;
 
-    public SocketAccepter(int tcpPort, Queue<Socket> socketQueue) {
+    public SocketAccepter(int tcpPort, /*Queue<Socket> socketQueue,*/ Selector readSelector) {
         this.tcpPort = tcpPort;
-        this.socketQueue = socketQueue;
+//        this.socketQueue = socketQueue;
+        this.selector = readSelector;
     }
 
 
@@ -24,18 +27,22 @@ public class SocketAccepter implements Runnable {
     public void run() {
         try {
             serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.configureBlocking(false);
             serverSocketChannel.bind(new InetSocketAddress(tcpPort));
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            System.out.println("reigster");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        while (true) {
-            try {
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                System.out.println("com.webserver.Socket accepted: " + socketChannel);
-                socketQueue.add(new Socket(socketChannel));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (true) {
+//            try {
+
+//                SocketChannel socketChannel = serverSocketChannel.accept();
+//                System.out.println("com.webserver.Socket accepted: " + socketChannel);
+//                socketQueue.add(new Socket(socketChannel));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 }
